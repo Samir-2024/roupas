@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -21,14 +22,16 @@ public class UserController {
     // ==============================
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     // ==============================
     // CONSTRUCTORS
     // ==============================
 
     @Autowired
-    public UserController(UserRepository userRepository) {
+    public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     // ==============================
@@ -42,6 +45,9 @@ public class UserController {
     )
     public ResponseEntity<?> create(@RequestBody User user) {
         try {
+            if (user.getPassword() != null) {
+                user.setPassword(passwordEncoder.encode(user.getPassword()));
+            }
             User entity = userRepository.save(user);
             URI uri = URI.create("/users/" + entity.getUserId());
             return ResponseEntity.created(uri).body(entity);
